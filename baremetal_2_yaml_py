@@ -1,0 +1,57 @@
+
+def main(yamlfile,yamloutfile,csvfile):
+    """
+    Convert baremetal.csv - baremetalConfig.yml
+
+    arg1: input baremetal.yml
+    arg2: output baremetal.yml
+    arg3: baremetal.csv
+
+    """
+
+
+    yamlfile = yamlfile
+    yamloutfile = yamloutfile
+    #yamlfile = 'baremetalConfig.yml'
+    #yamloutfile = 'baremetalConfig_new.yml'
+    #csvfile = 'baremetal.csv'
+    csvfile = csvfile
+    interface = 'eth1'
+    pxe_addr = '172.16.'
+    vlan = '50'
+
+    with open(yamlfile, 'r') as stream:
+        yamlcfg = yaml.load(stream)
+    with open(csvfile, 'rb') as csvinfo:
+        csvcfg = csv.reader(csvinfo)
+        i = 0
+        for item in csvcfg:
+            try:
+                yamlcfg['baremetal_servers'][i]['ilo_ip'] = item[3]
+                yamlcfg['baremetal_servers'][i]['ilo_password'] = item[2]
+                yamlcfg['baremetal_servers'][i]['ilo_user'] = item[1]
+                yamlcfg['baremetal_servers'][i]['pxe_interface'] = interface
+                yamlcfg['baremetal_servers'][i]['pxe_mac_addr'] = item[0]
+                yamlcfg['baremetal_servers'][i]['pxe_ip_addr'] = pxe_addr+vlan+'.'+str(i+3)
+                yamlcfg['baremetal_network']['subnet'] = pxe_addr+vlan+'.0'
+                yamlcfg['baremetal_network']['gateway'] = pxe_addr+vlan+'.1'
+                yamlcfg['baremetal_network']['name_server'] = pxe_addr+'1.5'
+                yamlcfg['baremetal_network']['server_interface'] = interface
+                i+=1
+            except:
+                pass
+
+
+    with open(yamloutfile, 'w') as yamlout:
+        yamlout.write(yaml.safe_dump(yamlcfg, width=50, default_flow_style=False, tags=None, indent=10, line_break="\n", explicit_start=True))
+
+if __name__ == '__main__':
+
+    import yaml
+    import csv
+    import sys
+
+    try:
+        main(sys.argv[1],sys.argv[2],sys.argv[3])
+    except:
+        print main.__doc__
